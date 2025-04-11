@@ -8,6 +8,7 @@ import (
 
 	"github.com/abdellani/go-build-your-own-redis/app/deserializer"
 	"github.com/abdellani/go-build-your-own-redis/app/handler"
+	"github.com/abdellani/go-build-your-own-redis/app/storage"
 )
 
 // Ensures gofmt doesn't remove the "net" and "os" imports in stage 1 (feel free to remove this!)
@@ -25,17 +26,19 @@ func main() {
 		fmt.Println("Failed to bind to port 6379")
 		os.Exit(1)
 	}
+	storage := storage.New()
+	handler := handler.NewHandler(storage)
 	for {
 		conn, err := l.Accept()
 		if err != nil {
 			fmt.Println("Error accepting connection: ", err.Error())
 			os.Exit(1)
 		}
-		go handleConnection(conn)
+		go handleConnection(conn, handler)
 	}
 }
 
-func handleConnection(conn net.Conn) {
+func handleConnection(conn net.Conn, handler *handler.Handler) {
 	buf := make([]byte, 1024)
 	defer conn.Close()
 	for {
@@ -47,7 +50,6 @@ func handleConnection(conn net.Conn) {
 		received.Write(buf[:n])
 		des := deserializer.New(received.String())
 		command := des.Deserialize()
-		handler := handler.NewHandler()
 		resp := handler.Handle(command)
 		conn.Write([]byte(resp))
 	}
