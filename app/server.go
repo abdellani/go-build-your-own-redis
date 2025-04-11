@@ -5,6 +5,9 @@ import (
 	"fmt"
 	"net"
 	"os"
+
+	"github.com/abdellani/go-build-your-own-redis/app/deserializer"
+	"github.com/abdellani/go-build-your-own-redis/app/handler"
 )
 
 // Ensures gofmt doesn't remove the "net" and "os" imports in stage 1 (feel free to remove this!)
@@ -42,7 +45,10 @@ func handleConnection(conn net.Conn) {
 			break
 		}
 		received.Write(buf[:n])
-		resp := "+PONG\r\n"
+		des := deserializer.New(received.String())
+		command := des.Deserialize()
+		handler := handler.NewHandler()
+		resp := handler.Handle(command)
 		conn.Write([]byte(resp))
 	}
 }
