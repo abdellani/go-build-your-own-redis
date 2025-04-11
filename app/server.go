@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"net"
 	"os"
@@ -21,9 +22,27 @@ func main() {
 		fmt.Println("Failed to bind to port 6379")
 		os.Exit(1)
 	}
-	_, err = l.Accept()
-	if err != nil {
-		fmt.Println("Error accepting connection: ", err.Error())
-		os.Exit(1)
+	for {
+		conn, err := l.Accept()
+		if err != nil {
+			fmt.Println("Error accepting connection: ", err.Error())
+			os.Exit(1)
+		}
+		go handleConnection(conn)
+	}
+}
+
+func handleConnection(conn net.Conn) {
+	buf := make([]byte, 1024)
+	defer conn.Close()
+	for {
+		received := bytes.Buffer{}
+		n, err := conn.Read(buf)
+		if err != nil {
+			break
+		}
+		received.Write(buf[:n])
+		resp := "+PONG\r\n"
+		conn.Write([]byte(resp))
 	}
 }

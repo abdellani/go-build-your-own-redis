@@ -6,6 +6,6 @@
 //
 // DON'T EDIT THIS!
 
-module github.com/codecrafters-io/redis-starter-go
+module github.com/abdellani/go-build-your-own-redis
 
 go 1.22
