@@ -2,10 +2,12 @@ package main
 
 import (
 	"bytes"
+	"flag"
 	"fmt"
 	"net"
 	"os"
 
+	"github.com/abdellani/go-build-your-own-redis/app/config"
 	"github.com/abdellani/go-build-your-own-redis/app/deserializer"
 	"github.com/abdellani/go-build-your-own-redis/app/handler"
 	"github.com/abdellani/go-build-your-own-redis/app/storage"
@@ -18,16 +20,23 @@ var _ = os.Exit
 func main() {
 	// You can use print statements as follows for debugging, they'll be visible when running tests.
 	fmt.Println("Logs from your program will appear here!")
+	startServer(
+		handler.NewHandler(storage.New(), LoadConfigurations()))
+}
 
-	// Uncomment this block to pass the first stage
-	//
+func LoadConfigurations() *config.Config {
+	configurations := config.New()
+	flag.StringVar(&configurations.RDB.Dir, "dir", "", "the directory where RDB will be stored")
+	flag.StringVar(&configurations.RDB.FileName, "dbfilename", "", "this RDB file name")
+	flag.Parse()
+	return configurations
+}
+func startServer(handler *handler.Handler) {
 	l, err := net.Listen("tcp", "0.0.0.0:6379")
 	if err != nil {
 		fmt.Println("Failed to bind to port 6379")
 		os.Exit(1)
 	}
-	storage := storage.New()
-	handler := handler.NewHandler(storage)
 	for {
 		conn, err := l.Accept()
 		if err != nil {

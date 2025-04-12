@@ -16,3 +16,12 @@ func (s *Serializer) BulkString(text string) string {
 func (s *Serializer) NullBulkString() string {
 	return "$-1\r\n"
 }
+
+func (s *Serializer) BulkStringArray(texts []string) string {
+	size := len(texts)
+	result := fmt.Sprintf("*%d\r\n", size)
+	for _, text := range texts {
+		result += text
+	}
+	return result
+}

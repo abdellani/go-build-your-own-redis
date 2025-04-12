@@ -4,18 +4,20 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/abdellani/go-build-your-own-redis/app/config"
 	"github.com/abdellani/go-build-your-own-redis/app/deserializer"
 	"github.com/abdellani/go-build-your-own-redis/app/serializer"
 	"github.com/abdellani/go-build-your-own-redis/app/storage"
 )
 
 type Handler struct {
-	Storage    *storage.Storage
-	Serializer serializer.Serializer
+	Storage        *storage.Storage
+	Serializer     serializer.Serializer
+	Configurations config.Config
 }
 
-func NewHandler(s *storage.Storage) *Handler {
-	return &Handler{Storage: s}
+func NewHandler(s *storage.Storage, c *config.Config) *Handler {
+	return &Handler{Storage: s, Configurations: *c}
 }
 func (h *Handler) Handle(command *deserializer.Command) string {
 	if strings.Compare(command.Command, "PING") == 0 {
@@ -26,6 +28,8 @@ func (h *Handler) Handle(command *deserializer.Command) string {
 		return h.Set(command)
 	} else if strings.Compare(command.Command, "GET") == 0 {
 		return h.Get(command)
+	} else if strings.Compare(command.Command, "CONFIG") == 0 {
+		return h.Config(command)
 	} else {
 		return ""
 	}
