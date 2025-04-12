@@ -1,16 +1,17 @@
 package handler
 
 import (
-	"fmt"
 	"strconv"
 	"strings"
 
 	"github.com/abdellani/go-build-your-own-redis/app/deserializer"
+	"github.com/abdellani/go-build-your-own-redis/app/serializer"
 	"github.com/abdellani/go-build-your-own-redis/app/storage"
 )
 
 type Handler struct {
-	Storage *storage.Storage
+	Storage    *storage.Storage
+	Serializer serializer.Serializer
 }
 
 func NewHandler(s *storage.Storage) *Handler {
@@ -31,13 +32,12 @@ func (h *Handler) Handle(command *deserializer.Command) string {
 }
 
 func (h *Handler) Ping() string {
-	return "+PONG\r\n"
+	return h.Serializer.SimpleString("PONG")
 }
 
 func (h *Handler) Echo(command *deserializer.Command) string {
 	echo := command.Arguments[0]
-	responseTemplate := "$%d\r\n%s\r\n"
-	return fmt.Sprintf(responseTemplate, len(echo), echo)
+	return h.Serializer.BulkString(echo)
 }
 
 func (h *Handler) Set(command *deserializer.Command) string {
@@ -50,16 +50,14 @@ func (h *Handler) Set(command *deserializer.Command) string {
 			h.Storage.SetExpiration(key, duration)
 		}
 	}
-	return "+OK\r\n"
+	return h.Serializer.SimpleString("OK")
 }
 
 func (h *Handler) Get(command *deserializer.Command) string {
 	key := command.Arguments[0]
 	value := h.Storage.Get(key)
 	if len(value) == 0 {
-		return "$-1\r\n"
+		return h.Serializer.NullBulkString()
 	}
-	template := "$%d\r\n%s\r\n"
-
-	return fmt.Sprintf(template, len(value), value)
+	return h.Serializer.BulkString(value)
 }
