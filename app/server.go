@@ -2,14 +2,18 @@ package main
 
 import (
 	"bytes"
+	"errors"
 	"flag"
 	"fmt"
+	"log"
 	"net"
 	"os"
+	"path/filepath"
 
 	"github.com/abdellani/go-build-your-own-redis/app/config"
 	"github.com/abdellani/go-build-your-own-redis/app/deserializer"
 	"github.com/abdellani/go-build-your-own-redis/app/handler"
+	"github.com/abdellani/go-build-your-own-redis/app/rdb"
 	"github.com/abdellani/go-build-your-own-redis/app/storage"
 )
 
@@ -20,10 +24,30 @@ var _ = os.Exit
 func main() {
 	// You can use print statements as follows for debugging, they'll be visible when running tests.
 	fmt.Println("Logs from your program will appear here!")
+	configurations := LoadConfigurations()
+	storage := storage.New()
+	LoadRDB(configurations, storage)
 	startServer(
-		handler.NewHandler(storage.New(), LoadConfigurations()))
+		handler.NewHandler(storage, configurations))
 }
 
+func LoadRDB(configurations *config.Config, storage *storage.Storage) {
+	filePath := filepath.Join(configurations.RDB.Dir, configurations.RDB.FileName)
+	_, err := os.Stat(filePath)
+	if errors.Is(err, os.ErrNotExist) {
+		log.Println("RDB not loaded")
+		return
+	}
+	data, err := os.ReadFile(filePath)
+	if err != nil {
+		log.Println("RDB not loaded")
+		return
+	}
+	decoder := rdb.New(data)
+	decoder.Decode()
+	decoder.WriteEntries(storage)
+
+}
 func LoadConfigurations() *config.Config {
 	configurations := config.New()
 	flag.StringVar(&configurations.RDB.Dir, "dir", "", "the directory where RDB will be stored")
@@ -31,6 +55,7 @@ func LoadConfigurations() *config.Config {
 	flag.Parse()
 	return configurations
 }
+
 func startServer(handler *handler.Handler) {
 	l, err := net.Listen("tcp", "0.0.0.0:6379")
 	if err != nil {

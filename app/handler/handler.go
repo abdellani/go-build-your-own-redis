@@ -1,6 +1,8 @@
 package handler
 
 import (
+	"log"
+	"os"
 	"strconv"
 	"strings"
 
@@ -20,19 +22,24 @@ func NewHandler(s *storage.Storage, c *config.Config) *Handler {
 	return &Handler{Storage: s, Configurations: *c}
 }
 func (h *Handler) Handle(command *deserializer.Command) string {
-	if strings.Compare(command.Command, "PING") == 0 {
+	switch command.Command {
+	case "PING":
 		return h.Ping()
-	} else if strings.Compare(command.Command, "ECHO") == 0 {
+	case "ECHO":
 		return h.Echo(command)
-	} else if strings.Compare(command.Command, "SET") == 0 {
+	case "SET":
 		return h.Set(command)
-	} else if strings.Compare(command.Command, "GET") == 0 {
+	case "GET":
 		return h.Get(command)
-	} else if strings.Compare(command.Command, "CONFIG") == 0 {
+	case "CONFIG":
 		return h.Config(command)
-	} else {
+	default:
+		log.Fatal("command not recognized")
+		os.Exit(-1)
 		return ""
+
 	}
+
 }
 
 func (h *Handler) Ping() string {
