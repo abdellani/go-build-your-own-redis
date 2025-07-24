@@ -32,6 +32,15 @@ func (s *Storage) Delete(key string) {
 	delete(s.Map, key)
 }
 
+func (s *Storage) Keys() []string {
+	s.m.Lock()
+	defer s.m.Unlock()
+	result := []string{}
+	for k, _ := range s.Map {
+		result = append(result, k)
+	}
+	return result
+}
 func (s *Storage) SetExpiration(key string, millieseconds int) {
 	go func() {
 		time.Sleep(time.Millisecond * time.Duration(millieseconds))

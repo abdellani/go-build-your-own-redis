@@ -82,8 +82,8 @@ func handleConnection(conn net.Conn, handler *handler.Handler) {
 			break
 		}
 		received.Write(buf[:n])
-		des := deserializer.New(received.String())
-		command := des.Deserialize()
+		deserialized := deserializer.New(received.String())
+		command := deserialized.Deserialize()
 		resp := handler.Handle(command)
 		conn.Write([]byte(resp))
 	}

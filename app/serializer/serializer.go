@@ -21,7 +21,7 @@ func (s *Serializer) BulkStringArray(texts []string) string {
 	size := len(texts)
 	result := fmt.Sprintf("*%d\r\n", size)
 	for _, text := range texts {
-		result += text
+		result += s.BulkString(text)
 	}
 	return result
 }
