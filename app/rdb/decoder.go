@@ -4,6 +4,8 @@ import (
 	"encoding/binary"
 	"log"
 	"os"
+
+	"github.com/abdellani/go-build-your-own-redis/app/storage"
 )
 
 type Decoder struct {
@@ -17,7 +19,7 @@ type RdbContent struct {
 	VersionNumber       string
 	Auxilaries          map[string]string
 	ResizedbInformation ResizedbInformation
-	Entries             map[string]string
+	Entries             map[string]storage.Value
 }
 
 type ResizedbInformation struct {
@@ -26,7 +28,7 @@ type ResizedbInformation struct {
 }
 
 type Storage interface {
-	Set(key string, value string)
+	Set(key string, value storage.Value)
 }
 
 func New(data []byte) *Decoder {
@@ -36,7 +38,7 @@ func New(data []byte) *Decoder {
 		Content: RdbContent{
 			Auxilaries:          map[string]string{},
 			ResizedbInformation: ResizedbInformation{},
-			Entries:             map[string]string{},
+			Entries:             map[string]storage.Value{},
 		},
 	}
 }

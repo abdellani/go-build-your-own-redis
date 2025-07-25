@@ -1,8 +1,12 @@
 package rdb
 
 import (
+	"encoding/binary"
 	"log"
 	"os"
+	"time"
+
+	"github.com/abdellani/go-build-your-own-redis/app/storage"
 )
 
 func (d *Decoder) ReadDatabaseSection() {
@@ -37,9 +41,9 @@ func (d *Decoder) DecodeHashTableSizeInformation() {
 func (d *Decoder) DecodeKeysValues() {
 	for range d.Content.ResizedbInformation.DatabaseHashTableSize {
 		switch d.ReadFlag() {
-		case 0x00:
+		case 0x00: // no expiration time
 			d.ReturnCursorNStepsBack(1) // to reload the flag in the next function call
-			d.ReadKeyValue()
+			d.ReadKeyValue(time.Time{})
 		case 0xFC:
 			d.ReadKeyValueWithExpiryInMilliseconds()
 		case 0xFD:
@@ -51,12 +55,15 @@ func (d *Decoder) DecodeKeysValues() {
 	}
 }
 
-func (d *Decoder) ReadKeyValue() {
+func (d *Decoder) ReadKeyValue(t time.Time) {
 	switch d.ReadFlag() {
 	case 0x00:
 		key := d.ReadString()
 		value := d.ReadString()
-		d.Content.Entries[key] = value
+		d.Content.Entries[key] = storage.Value{
+			Value:          value,
+			ExpirationTime: t,
+		}
 	default:
 		log.Fatal("Unexpected flag")
 		os.Exit(-1)
@@ -64,11 +71,13 @@ func (d *Decoder) ReadKeyValue() {
 }
 
 func (d *Decoder) ReadKeyValueWithExpiryInMilliseconds() {
-	d.ReadBytes(8) // time in millieseconds
-	d.ReadKeyValue()
+	milliseconds := binary.LittleEndian.Uint64(d.ReadBytes(8))
+	t := time.UnixMilli(int64(milliseconds)).UTC()
+	d.ReadKeyValue(t)
 }
 
 func (d *Decoder) ReadKeyValueWithExpiryInSeconds() {
-	d.ReadBytes(4) // time in millieseconds
-	d.ReadKeyValue()
+	seconds := binary.LittleEndian.Uint32(d.ReadBytes(4)) // time in seconds
+	t := time.Unix(int64(seconds), 0).UTC()
+	d.ReadKeyValue(t)
 }

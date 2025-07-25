@@ -6,16 +6,21 @@ import (
 )
 
 type Storage struct {
-	Map map[string]string
+	Map map[string]Value
 	m   sync.Mutex
+}
+
+type Value struct {
+	Value          string
+	ExpirationTime time.Time
 }
 
 func New() *Storage {
 	return &Storage{
-		Map: map[string]string{},
+		Map: map[string]Value{},
 	}
 }
-func (s *Storage) Set(key string, value string) {
+func (s *Storage) Set(key string, value Value) {
 	s.m.Lock()
 	defer s.m.Unlock()
 	s.Map[key] = value
@@ -24,8 +29,14 @@ func (s *Storage) Set(key string, value string) {
 func (s *Storage) Get(key string) string {
 	s.m.Lock()
 	defer s.m.Unlock()
-	return s.Map[key]
+	if s.Map[key].ExpirationTime.IsZero() || s.Map[key].ExpirationTime.After(time.Now()) {
+		return s.Map[key].Value
+	}
+	// expiration time is in past
+	delete(s.Map, key)
+	return ""
 }
+
 func (s *Storage) Delete(key string) {
 	s.m.Lock()
 	defer s.m.Unlock()
@@ -40,10 +51,4 @@ func (s *Storage) Keys() []string {
 		result = append(result, k)
 	}
 	return result
-}
-func (s *Storage) SetExpiration(key string, millieseconds int) {
-	go func() {
-		time.Sleep(time.Millisecond * time.Duration(millieseconds))
-		s.Delete(key)
-	}()
 }

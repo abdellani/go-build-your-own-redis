@@ -26,7 +26,9 @@ func main() {
 	fmt.Println("Logs from your program will appear here!")
 	configurations := LoadConfigurations()
 	storage := storage.New()
-	LoadRDB(configurations, storage)
+	if configurations.IsRdbProvided() {
+		LoadRDB(configurations, storage)
+	}
 	startServer(
 		handler.NewHandler(storage, configurations))
 }
@@ -46,7 +48,6 @@ func LoadRDB(configurations *config.Config, storage *storage.Storage) {
 	decoder := rdb.New(data)
 	decoder.Decode()
 	decoder.WriteEntries(storage)
-
 }
 func LoadConfigurations() *config.Config {
 	configurations := config.New()
