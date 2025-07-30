@@ -35,6 +35,8 @@ func (h *Handler) Handle(command *deserializer.Command) string {
 		return h.Keys(command)
 	case "RPUSH":
 		return h.RPush(command)
+	case "LLEN":
+		return h.LLen(command)
 	case "LPUSH":
 		return h.LPush(command)
 	case "LRANGE":
