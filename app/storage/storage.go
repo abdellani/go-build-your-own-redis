@@ -12,6 +12,7 @@ type Storage struct {
 
 type Value struct {
 	Value          string
+	Values         []string
 	ExpirationTime time.Time
 }
 
@@ -51,4 +52,13 @@ func (s *Storage) Keys() []string {
 		result = append(result, k)
 	}
 	return result
+}
+
+func (s *Storage) Push(key, value string) int {
+	s.m.Lock()
+	defer s.m.Unlock()
+	valueObject := s.Map[key]
+	valueObject.Values = append(valueObject.Values, value)
+	s.Map[key] = valueObject
+	return len(valueObject.Values)
 }
