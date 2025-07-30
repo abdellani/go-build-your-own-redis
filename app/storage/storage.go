@@ -62,3 +62,14 @@ func (s *Storage) Push(key, value string) int {
 	s.Map[key] = valueObject
 	return len(valueObject.Values)
 }
+
+func (s *Storage) Range(key string, start, end int) []string {
+	s.m.Lock()
+	defer s.m.Unlock()
+	list := s.Map[key].Values
+	result := []string{}
+	for i := start; i <= end && i < len(list); i++ {
+		result = append(result, list[i])
+	}
+	return result
+}
