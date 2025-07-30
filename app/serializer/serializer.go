@@ -28,3 +28,10 @@ func (s *Serializer) BulkStringArray(texts []string) string {
 	}
 	return result
 }
+
+func (s *Serializer) BulkStringArrayOrSingle(texts []string) string {
+	if len(texts) == 1 {
+		return s.BulkString(texts[0])
+	}
+	return s.BulkStringArray(texts)
+}
