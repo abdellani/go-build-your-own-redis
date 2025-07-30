@@ -5,6 +5,9 @@ import "fmt"
 type Serializer struct {
 }
 
+func (s *Serializer) Integer(i int) string {
+	return fmt.Sprintf(":%d\r\n", i)
+}
 func (s *Serializer) SimpleString(text string) string {
 	return fmt.Sprintf("+%s\r\n", text)
 }

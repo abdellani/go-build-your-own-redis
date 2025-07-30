@@ -12,18 +12,13 @@ type Deserializer struct {
 	Index   int
 }
 
-type Command struct {
-	Command   string
-	Arguments []string
-}
-
 func New(payload string) *Deserializer {
 	return &Deserializer{Payload: payload}
 }
 
 func (d *Deserializer) Deserialize() *Command {
 	symbol, _ := d.ReadSymbol()
-	if IsArray(symbol) == true {
+	if IsArray(symbol) {
 		return d.ReadArray()
 	} else {
 		os.Exit(-1)
@@ -37,13 +32,13 @@ func (d *Deserializer) ReadArray() *Command {
 	command := &Command{}
 	symbol, _ := d.ReadSymbol()
 
-	if IsString(symbol) == true {
+	if IsString(symbol) {
 		command.Command = d.ReadString()
 	}
 
 	for i := 1; i < size; i++ {
 		symbol, _ := d.ReadSymbol()
-		if IsString(symbol) == true {
+		if IsString(symbol) {
 			command.Arguments = append(command.Arguments,
 				d.ReadString(),
 			)

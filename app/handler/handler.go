@@ -33,6 +33,8 @@ func (h *Handler) Handle(command *deserializer.Command) string {
 		return h.Config(command)
 	case "KEYS":
 		return h.Keys(command)
+	case "RPUSH":
+		return h.RPush(command)
 	default:
 		log.Fatal("command not recognized")
 		os.Exit(-1)
