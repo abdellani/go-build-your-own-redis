@@ -54,11 +54,21 @@ func (s *Storage) Keys() []string {
 	return result
 }
 
-func (s *Storage) Push(key, value string) int {
+func (s *Storage) RPush(key, value string) int {
 	s.m.Lock()
 	defer s.m.Unlock()
 	valueObject := s.Map[key]
 	valueObject.Values = append(valueObject.Values, value)
+	s.Map[key] = valueObject
+	return len(valueObject.Values)
+}
+
+func (s *Storage) LPush(key, value string) int {
+	s.m.Lock()
+	defer s.m.Unlock()
+	prepend := []string{value}
+	valueObject := s.Map[key]
+	valueObject.Values = append(prepend, valueObject.Values...)
 	s.Map[key] = valueObject
 	return len(valueObject.Values)
 }
