@@ -61,7 +61,7 @@ func (s *Storage) RPush(key, value string) int {
 	valueObject.Values = append(valueObject.Values, value)
 	s.Map[key] = valueObject
 	s.m.Unlock()
-	s.UnblockWaiting(key)
+	go s.UnblockWaiting(key)
 	return len(valueObject.Values)
 }
 
@@ -132,7 +132,7 @@ func (s *Storage) LPop(key string, num int) []string {
 	return result
 }
 
-func (s *Storage) BLPOP(key string, waitTime int) string {
+func (s *Storage) BLPOP(key string, waitTime int) (string, bool) {
 	pop := func() (string, bool) {
 
 		s.m.Lock()
@@ -149,21 +149,32 @@ func (s *Storage) BLPOP(key string, waitTime int) string {
 		s.Map[key] = objectValue
 		return result, true
 	}
-	wait := func() {
+	wait := func() <-chan struct{} {
 		s.m.Lock()
 		object := s.Map[key]
 		pause := make(chan struct{})
 		object.Blocked = append(object.Blocked, pause)
 		s.Map[key] = object
 		s.m.Unlock()
-		<-pause
+		return pause
+	}
+	timer := time.After(time.Duration(waitTime) * time.Millisecond)
+	if waitTime == 0 {
+		timer = time.After(time.Duration(1000000) * time.Hour)
+
 	}
 	for {
 		result, ok := pop()
 		if ok {
-			return result
+			return result, true
 		}
-		wait()
+		select {
+		case <-wait():
+			continue
+		case <-timer:
+			return "", false
+		}
+
 	}
 
 }
