@@ -14,6 +14,7 @@ type Value struct {
 	Value          string
 	Values         []string
 	ExpirationTime time.Time
+	Blocked        []chan struct{}
 }
 
 func New() *Storage {
@@ -56,11 +57,26 @@ func (s *Storage) Keys() []string {
 
 func (s *Storage) RPush(key, value string) int {
 	s.m.Lock()
-	defer s.m.Unlock()
 	valueObject := s.Map[key]
 	valueObject.Values = append(valueObject.Values, value)
 	s.Map[key] = valueObject
+	s.m.Unlock()
+	s.UnblockWaiting(key)
 	return len(valueObject.Values)
+}
+
+func (s *Storage) UnblockWaiting(key string) {
+	s.m.Lock()
+	defer s.m.Unlock()
+	valueObject := s.Map[key]
+	if len(valueObject.Blocked) == 0 {
+		return
+	}
+	blocked := valueObject.Blocked[0]
+	valueObject.Blocked = valueObject.Blocked[1:]
+	s.Map[key] = valueObject
+	blocked <- struct{}{}
+
 }
 
 func (s *Storage) LPush(key, value string) int {
@@ -114,4 +130,40 @@ func (s *Storage) LPop(key string, num int) []string {
 	objectValue.Values = objectValue.Values[num:]
 	s.Map[key] = objectValue
 	return result
+}
+
+func (s *Storage) BLPOP(key string, waitTime int) string {
+	pop := func() (string, bool) {
+
+		s.m.Lock()
+		defer s.m.Unlock()
+		objectValue, ok := s.Map[key]
+		if !ok {
+			return "", false
+		}
+		if len(objectValue.Values) == 0 {
+			return "", false
+		}
+		result := objectValue.Values[0]
+		objectValue.Values = objectValue.Values[1:]
+		s.Map[key] = objectValue
+		return result, true
+	}
+	wait := func() {
+		s.m.Lock()
+		object := s.Map[key]
+		pause := make(chan struct{})
+		object.Blocked = append(object.Blocked, pause)
+		s.Map[key] = object
+		s.m.Unlock()
+		<-pause
+	}
+	for {
+		result, ok := pop()
+		if ok {
+			return result
+		}
+		wait()
+	}
+
 }

@@ -43,6 +43,8 @@ func (h *Handler) Handle(command *deserializer.Command) string {
 		return h.LRange(command)
 	case "LPOP":
 		return h.LPop(command)
+	case "BLPOP":
+		return h.BLPop(command)
 	default:
 		log.Fatal("command not recognized")
 		os.Exit(-1)
