@@ -57,17 +57,15 @@ func (s *Storage) Keys() []string {
 
 func (s *Storage) RPush(key, value string) int {
 	s.m.Lock()
+	defer s.m.Unlock()
 	valueObject := s.Map[key]
 	valueObject.Values = append(valueObject.Values, value)
 	s.Map[key] = valueObject
-	s.m.Unlock()
-	go s.UnblockWaiting(key)
+	s.UnblockWaitingWithoutLock(key)
 	return len(valueObject.Values)
 }
 
-func (s *Storage) UnblockWaiting(key string) {
-	s.m.Lock()
-	defer s.m.Unlock()
+func (s *Storage) UnblockWaitingWithoutLock(key string) {
 	valueObject := s.Map[key]
 	if len(valueObject.Blocked) == 0 {
 		return
