@@ -16,6 +16,6 @@ func (h *Handler) BLPop(cmd *deserializer.Command) string {
 	if found {
 		return h.Serializer.BulkStringArray([]string{key, result})
 	} else {
-		return h.Serializer.NullBulkString()
+		return h.Serializer.NullArray()
 	}
 }

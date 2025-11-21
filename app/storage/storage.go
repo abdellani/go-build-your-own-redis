@@ -172,7 +172,5 @@ func (s *Storage) BLPOP(key string, waitTime int) (string, bool) {
 		case <-timer:
 			return "", false
 		}
-
 	}
-
 }

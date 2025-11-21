@@ -20,6 +20,10 @@ func (s *Serializer) NullBulkString() string {
 	return "$-1\r\n"
 }
 
+func (s *Serializer) NullArray() string {
+	return "*-1\r\n"
+}
+
 func (s *Serializer) BulkStringArray(texts []string) string {
 	size := len(texts)
 	result := fmt.Sprintf("*%d\r\n", size)
