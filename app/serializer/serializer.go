@@ -39,3 +39,7 @@ func (s *Serializer) BulkStringArrayOrSingle(texts []string) string {
 	}
 	return s.BulkStringArray(texts)
 }
+
+func (s *Serializer) SimpleError(text string) string {
+	return fmt.Sprintf("-%s\r\n", text)
+}

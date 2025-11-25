@@ -11,11 +11,11 @@ func (s *Storage) BLPOP(key string, waitTime int) (string, bool) {
 		if !ok {
 			return "", false
 		}
-		if len(objectValue.Values) == 0 {
+		if len(objectValue.List) == 0 {
 			return "", false
 		}
-		result := objectValue.Values[0]
-		objectValue.Values = objectValue.Values[1:]
+		result := objectValue.List[0]
+		objectValue.List = objectValue.List[1:]
 		s.Map[key] = objectValue
 		return result, true
 	}

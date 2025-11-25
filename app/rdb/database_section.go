@@ -60,7 +60,7 @@ func (d *Decoder) ReadKeyValue(t time.Time) {
 	case 0x00:
 		key := d.ReadString()
 		value := d.ReadString()
-		d.Content.Entries[key] = storage.Value{
+		d.Content.Entries[key] = storage.Data{
 			Value:          value,
 			ExpirationTime: t,
 		}

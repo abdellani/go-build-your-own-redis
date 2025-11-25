@@ -11,7 +11,7 @@ import (
 
 func (h *Handler) Set(command *deserializer.Command) string {
 	key := command.Arguments[0]
-	value := storage.Value{
+	value := storage.Data{
 		Value: command.Arguments[1],
 	}
 

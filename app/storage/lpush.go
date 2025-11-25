@@ -5,7 +5,7 @@ func (s *Storage) LPush(key, value string) int {
 	defer s.m.Unlock()
 	prepend := []string{value}
 	valueObject := s.Map[key]
-	valueObject.Values = append(prepend, valueObject.Values...)
+	valueObject.List = append(prepend, valueObject.List...)
 	s.Map[key] = valueObject
-	return len(valueObject.Values)
+	return len(valueObject.List)
 }

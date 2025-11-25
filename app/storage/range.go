@@ -3,7 +3,7 @@ package storage
 func (s *Storage) Range(key string, start, end int) []string {
 	s.m.Lock()
 	defer s.m.Unlock()
-	list := s.Map[key].Values
+	list := s.Map[key].List
 	result := []string{}
 	if start < 0 {
 		if -start > len(list) {

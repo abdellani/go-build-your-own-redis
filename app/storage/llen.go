@@ -8,5 +8,5 @@ func (s *Storage) LLen(key string) int {
 	if !exists {
 		return 0
 	}
-	return len(list.Values)
+	return len(list.List)
 }

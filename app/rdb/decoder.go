@@ -19,7 +19,7 @@ type RdbContent struct {
 	VersionNumber       string
 	Auxilaries          map[string]string
 	ResizedbInformation ResizedbInformation
-	Entries             map[string]storage.Value
+	Entries             map[string]storage.Data
 }
 
 type ResizedbInformation struct {
@@ -28,7 +28,7 @@ type ResizedbInformation struct {
 }
 
 type Storage interface {
-	Set(key string, value storage.Value)
+	Set(key string, value storage.Data)
 }
 
 func New(data []byte) *Decoder {
@@ -38,7 +38,7 @@ func New(data []byte) *Decoder {
 		Content: RdbContent{
 			Auxilaries:          map[string]string{},
 			ResizedbInformation: ResizedbInformation{},
-			Entries:             map[string]storage.Value{},
+			Entries:             map[string]storage.Data{},
 		},
 	}
 }

@@ -1,15 +1,59 @@
 package storage
 
-func (s *Storage) XAdd(streamKey, id string) string {
+import (
+	"errors"
+	"strconv"
+	"strings"
+)
+
+const (
+	XADD_ERROR_ID_MUST_BE_GREATER_THAN_0_0        = "ERR The ID specified in XADD must be greater than 0-0"
+	XADD_ERROR_ID_IS_EQUAL_OR_SMALL_TO_STREAM_TOP = "ERR The ID specified in XADD is equal or smaller than the target stream top item"
+)
+
+func (s *Storage) XAdd(streamKey, id string) (string, error) {
 	s.m.Lock()
 	defer s.m.Unlock()
-	_, ok := s.Map[streamKey]
+
+	if strings.Compare("0-0", id) == 0 {
+		return "", errors.New(XADD_ERROR_ID_MUST_BE_GREATER_THAN_0_0)
+	}
+	millieSecondsTimeStr, sequenceStr, _ := parseXaddId(id)
+	millieSecondsTime, _ := strconv.Atoi(millieSecondsTimeStr)
+	sequence, _ := strconv.Atoi(sequenceStr)
+	data, ok := s.Map[streamKey]
 
 	if !ok {
-		value := Value{
-			Type: STREAM_TYPE,
+		newData := Data{
+			Type: TYPE_STREAM,
+			Stream: Stream{
+				Items: []StreamItem{
+					{
+						MillieSecondTime: millieSecondsTime,
+						Sequence:         sequence,
+					},
+				},
+			},
 		}
-		s.Map[streamKey] = value
+		s.Map[streamKey] = newData
+		return id, nil
+	} else {
+		if !data.Stream.isValidId(millieSecondsTime, sequence) {
+			return "", errors.New(XADD_ERROR_ID_IS_EQUAL_OR_SMALL_TO_STREAM_TOP)
+		}
+		data.Stream.Items = append(data.Stream.Items, StreamItem{
+			MillieSecondTime: millieSecondsTime,
+			Sequence:         sequence,
+		})
+		s.Map[streamKey] = data
 	}
-	return id
+
+	return id, nil
+}
+func parseXaddId(id string) (string, string, error) {
+	items := strings.Split(id, "-")
+	if len(items) != 2 {
+		return "", "", errors.New("")
+	}
+	return items[0], items[1], nil
 }
