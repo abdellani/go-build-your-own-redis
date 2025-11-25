@@ -15,6 +15,27 @@ type Value struct {
 	Values         []string
 	ExpirationTime time.Time
 	Blocked        []chan struct{}
+	Type           Type
+}
+
+type Type int
+
+const (
+	UNKOWN_TYPE Type = iota - 1
+	STRING_TYPE
+	STREAM_TYPE
+)
+
+func (t Type) String() string {
+	switch t {
+	case STRING_TYPE:
+		return "string"
+	case STREAM_TYPE:
+		return "stream"
+	default:
+		return "none"
+	}
+
 }
 
 func New() *Storage {

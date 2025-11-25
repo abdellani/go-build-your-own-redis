@@ -47,6 +47,8 @@ func (h *Handler) Handle(command *deserializer.Command) string {
 		return h.BLPop(command)
 	case "TYPE":
 		return h.Type(command)
+	case "XADD":
+		return h.XAdd(command)
 	default:
 		log.Fatal("command not recognized")
 		os.Exit(-1)

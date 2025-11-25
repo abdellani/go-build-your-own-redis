@@ -6,10 +6,10 @@ package storage
 func (s *Storage) Type(key string) string {
 	s.m.Lock()
 	defer s.m.Unlock()
-	_, ok := s.Map[key]
+	value, ok := s.Map[key]
 	if !ok {
 		return "none"
 	}
-	return "string"
 
+	return value.Type.String()
 }
