@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"fmt"
 	"sync"
 	"time"
 )
@@ -44,6 +45,42 @@ func (s *Stream) isValidId(time, seq int) bool {
 		return false
 	}
 	return true
+}
+
+func (s *Stream) AddItem(time, seq int) {
+	s.Items = append(s.Items, StreamItem{
+		MillieSecondTime: time,
+		Sequence:         seq,
+	})
+}
+
+func (s *Stream) GetTop() *StreamItem {
+	return &s.Items[len(s.Items)-1]
+}
+func (s *Stream) generateNextSeq(time int) int {
+	if len(s.Items) == 0 {
+		if time == 0 {
+			return 1
+		} else {
+			return 0
+		}
+	}
+	top := s.GetTop()
+	if time == top.MillieSecondTime {
+		return top.Sequence + 1
+	}
+	return 0
+}
+
+func (s *Stream) GetTopId() string {
+	top := s.GetTop()
+	return fmt.Sprintf("%d-%d", top.MillieSecondTime, top.Sequence)
+}
+func NewDataStream() *Data {
+	return &Data{
+		Type:   TYPE_STREAM,
+		Stream: Stream{},
+	}
 }
 
 type Type int

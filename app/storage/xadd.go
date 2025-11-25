@@ -20,36 +20,32 @@ func (s *Storage) XAdd(streamKey, id string) (string, error) {
 	}
 	millieSecondsTimeStr, sequenceStr, _ := parseXaddId(id)
 	millieSecondsTime, _ := strconv.Atoi(millieSecondsTimeStr)
-	sequence, _ := strconv.Atoi(sequenceStr)
-	data, ok := s.Map[streamKey]
-
-	if !ok {
-		newData := Data{
-			Type: TYPE_STREAM,
-			Stream: Stream{
-				Items: []StreamItem{
-					{
-						MillieSecondTime: millieSecondsTime,
-						Sequence:         sequence,
-					},
-				},
-			},
-		}
-		s.Map[streamKey] = newData
-		return id, nil
+	data, exists := s.Map[streamKey]
+	var sequence int
+	if strings.Compare(sequenceStr, "*") != 0 {
+		sequence, _ = strconv.Atoi(sequenceStr)
 	} else {
-		if !data.Stream.isValidId(millieSecondsTime, sequence) {
-			return "", errors.New(XADD_ERROR_ID_IS_EQUAL_OR_SMALL_TO_STREAM_TOP)
-		}
-		data.Stream.Items = append(data.Stream.Items, StreamItem{
-			MillieSecondTime: millieSecondsTime,
-			Sequence:         sequence,
-		})
-		s.Map[streamKey] = data
+		sequence = data.Stream.generateNextSeq(millieSecondsTime)
 	}
 
-	return id, nil
+	if !exists {
+		// Define a new entry for the stream in the storage
+		newData := NewDataStream()
+		newData.Stream.AddItem(millieSecondsTime, sequence)
+		s.Map[streamKey] = *newData
+		return newData.Stream.GetTopId(), nil
+	}
+
+	if !data.Stream.isValidId(millieSecondsTime, sequence) {
+		return "", errors.New(XADD_ERROR_ID_IS_EQUAL_OR_SMALL_TO_STREAM_TOP)
+	}
+	data.Stream.AddItem(millieSecondsTime, sequence)
+
+	s.Map[streamKey] = data
+
+	return data.Stream.GetTopId(), nil
 }
+
 func parseXaddId(id string) (string, string, error) {
 	items := strings.Split(id, "-")
 	if len(items) != 2 {
