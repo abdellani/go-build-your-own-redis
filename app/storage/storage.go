@@ -72,6 +72,17 @@ func (s *Stream) generateNextSeq(time int) int {
 	return 0
 }
 
+func (s *Stream) getMillieseconds() int {
+	return int(time.Now().UnixMilli())
+
+}
+
+func (s *Stream) generateFullId() (int, int) {
+	millieSecondsTime := s.getMillieseconds()
+	sequence := s.generateNextSeq(millieSecondsTime)
+	return millieSecondsTime, sequence
+}
+
 func (s *Stream) GetTopId() string {
 	top := s.GetTop()
 	return fmt.Sprintf("%d-%d", top.MillieSecondTime, top.Sequence)

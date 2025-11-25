@@ -15,17 +15,24 @@ func (s *Storage) XAdd(streamKey, id string) (string, error) {
 	s.m.Lock()
 	defer s.m.Unlock()
 
+	//TODO: isolate the id parsing logic to the stream structure
 	if strings.Compare("0-0", id) == 0 {
 		return "", errors.New(XADD_ERROR_ID_MUST_BE_GREATER_THAN_0_0)
 	}
-	millieSecondsTimeStr, sequenceStr, _ := parseXaddId(id)
-	millieSecondsTime, _ := strconv.Atoi(millieSecondsTimeStr)
 	data, exists := s.Map[streamKey]
+	var millieSecondsTime int
 	var sequence int
-	if strings.Compare(sequenceStr, "*") != 0 {
-		sequence, _ = strconv.Atoi(sequenceStr)
+
+	if strings.Compare("*", id) == 0 {
+		millieSecondsTime, sequence = data.Stream.generateFullId()
 	} else {
-		sequence = data.Stream.generateNextSeq(millieSecondsTime)
+		millieSecondsTimeStr, sequenceStr, _ := parseXaddId(id)
+		millieSecondsTime, _ = strconv.Atoi(millieSecondsTimeStr)
+		if strings.Compare(sequenceStr, "*") != 0 {
+			sequence, _ = strconv.Atoi(sequenceStr)
+		} else {
+			sequence = data.Stream.generateNextSeq(millieSecondsTime)
+		}
 	}
 
 	if !exists {
