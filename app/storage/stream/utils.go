@@ -7,6 +7,9 @@ import (
 )
 
 func ParseRangeStart(start string) (int, int) {
+	if strings.Compare(start, "-") == 0 {
+		return 0, 0
+	}
 	var startTime int
 	var startSeq int
 	if DoesIdIncludeSequenceNumber(start) {
