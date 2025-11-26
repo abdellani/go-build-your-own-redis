@@ -33,6 +33,14 @@ func (s *Serializer) BulkStringArray(texts []string) string {
 	return result
 }
 
+func (s *Serializer) Array(texts []string) string {
+	size := len(texts)
+	result := fmt.Sprintf("*%d\r\n", size)
+	for _, text := range texts {
+		result += text
+	}
+	return result
+}
 func (s *Serializer) BulkStringArrayOrSingle(texts []string) string {
 	if len(texts) == 1 {
 		return s.BulkString(texts[0])

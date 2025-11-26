@@ -49,6 +49,8 @@ func (h *Handler) Handle(command *deserializer.Command) string {
 		return h.Type(command)
 	case "XADD":
 		return h.XAdd(command)
+	case "XRANGE":
+		return h.XRange(command)
 	default:
 		log.Fatal("command not recognized")
 		os.Exit(-1)
