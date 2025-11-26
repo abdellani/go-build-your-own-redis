@@ -22,6 +22,9 @@ func ParseRangeStart(start string) (int, int) {
 }
 
 func ParseRangeEnd(end string) (int, int) {
+	if strings.Compare(end, "+") == 0 {
+		return -1, -1
+	}
 	var endTime int
 	var endSeq int
 	if DoesIdIncludeSequenceNumber(end) {

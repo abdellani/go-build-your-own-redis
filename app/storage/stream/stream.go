@@ -79,16 +79,41 @@ func (s *Stream) GetRange(start, end string) []StreamItem {
 
 	for i := 0; i < len(s.Items); i++ {
 		item := s.Items[i]
-		if (item.MillieSecondTime == startTime && item.Sequence >= startSeq) ||
-			item.MillieSecondTime > startTime {
-			if item.MillieSecondTime > endTime {
-				break
-			}
-			if item.MillieSecondTime == endTime && item.MillieSecondTime > endSeq && endTime != -1 {
-				break
-			}
-			result = append(result, item)
+		inRange, timeToStop := InRange(startTime, startSeq, endTime, endSeq, item)
+		if timeToStop {
+			break
 		}
+		if !inRange {
+			continue
+		}
+		result = append(result, item)
 	}
 	return result
+}
+
+func InRange(startTime, startSeq, endTime, endSeq int, item StreamItem) (inRange bool, timeToStop bool) {
+	if item.MillieSecondTime < startTime {
+		return false, false
+	}
+	if item.MillieSecondTime == startTime && item.Sequence < startSeq {
+		return false, false
+	}
+	//This means item comes after the start limit
+
+	// when "+" is used, we want to continue to the end
+	if endTime == -1 && endSeq == -1 {
+		return true, false
+	}
+
+	// item's time comes after the end time limit
+	if item.MillieSecondTime > endTime {
+		return false, true
+	}
+	// seq == -1 means we want to take all the item in the milliesecondtime regradless of sequence time
+	if item.MillieSecondTime == endTime && item.Sequence > endSeq && endSeq != -1 {
+		return false, true
+	}
+
+	// item is in the targeted range
+	return true, false
 }
