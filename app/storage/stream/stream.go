@@ -91,29 +91,14 @@ func (s *Stream) GetRange(start, end string) []StreamItem {
 	return result
 }
 
-func InRange(startTime, startSeq, endTime, endSeq int, item StreamItem) (inRange bool, timeToStop bool) {
-	if item.MillieSecondTime < startTime {
-		return false, false
+func (s *Stream) GetItem(id string) []StreamItem {
+	time, seq, _ := ConvertIdToIntegers(id)
+	items := []StreamItem{}
+	for _, item := range s.Items {
+		if !IsGreater(item.MillieSecondTime, item.Sequence, time, seq) {
+			continue
+		}
+		items = append(items, item)
 	}
-	if item.MillieSecondTime == startTime && item.Sequence < startSeq {
-		return false, false
-	}
-	//This means item comes after the start limit
-
-	// when "+" is used, we want to continue to the end
-	if endTime == -1 && endSeq == -1 {
-		return true, false
-	}
-
-	// item's time comes after the end time limit
-	if item.MillieSecondTime > endTime {
-		return false, true
-	}
-	// seq == -1 means we want to take all the item in the milliesecondtime regradless of sequence time
-	if item.MillieSecondTime == endTime && item.Sequence > endSeq && endSeq != -1 {
-		return false, true
-	}
-
-	// item is in the targeted range
-	return true, false
+	return items
 }

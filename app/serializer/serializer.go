@@ -1,6 +1,10 @@
 package serializer
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/abdellani/go-build-your-own-redis/app/storage/stream"
+)
 
 type Serializer struct {
 }
@@ -50,4 +54,31 @@ func (s *Serializer) BulkStringArrayOrSingle(texts []string) string {
 
 func (s *Serializer) SimpleError(text string) string {
 	return fmt.Sprintf("-%s\r\n", text)
+}
+
+func (s *Serializer) StreamItems(items []stream.StreamItem) string {
+	var serializedItems []string = []string{}
+	for i := range len(items) {
+		item := items[i]
+		id := item.IdString()
+		values := item.Values
+
+		serializedId := s.BulkString(id)
+		serializedValue := s.BulkStringArray(values)
+		serializedItem := s.Array([]string{serializedId, serializedValue})
+		serializedItems = append(serializedItems, serializedItem)
+	}
+	return s.Array(serializedItems)
+}
+
+func (s *Serializer) XReadResult(key string, streamItems []stream.StreamItem) string {
+
+	return s.Array(
+		[]string{
+			s.Array([]string{
+				s.BulkString(key),
+				s.StreamItems(streamItems),
+			}),
+		},
+	)
 }

@@ -53,3 +53,46 @@ func SplitId(id string) (string, string, error) {
 	}
 	return items[0], items[1], nil
 }
+
+func ConvertIdToIntegers(id string) (int, int, error) {
+	//TODO: handle invalid ids
+	timeStr, seqStr, err := SplitId(id)
+	if err != nil {
+		return -1, -1, err
+	}
+	time, _ := strconv.Atoi(timeStr)
+	seq, _ := strconv.Atoi(seqStr)
+	return time, seq, nil
+
+}
+
+func IsGreater(time1, seq1, time2, seq2 int) bool {
+	return (time1 > time2) || (time1 == time2 && seq1 > seq2)
+}
+
+func InRange(startTime, startSeq, endTime, endSeq int, item StreamItem) (inRange bool, timeToStop bool) {
+	if item.MillieSecondTime < startTime {
+		return false, false
+	}
+	if item.MillieSecondTime == startTime && item.Sequence < startSeq {
+		return false, false
+	}
+	//This means item comes after the start limit
+
+	// when "+" is used, we want to continue to the end
+	if endTime == -1 && endSeq == -1 {
+		return true, false
+	}
+
+	// item's time comes after the end time limit
+	if item.MillieSecondTime > endTime {
+		return false, true
+	}
+	// seq == -1 means we want to take all the item in the milliesecondtime regradless of sequence time
+	if item.MillieSecondTime == endTime && item.Sequence > endSeq && endSeq != -1 {
+		return false, true
+	}
+
+	// item is in the targeted range
+	return true, false
+}
