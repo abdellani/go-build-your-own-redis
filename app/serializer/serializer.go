@@ -29,12 +29,11 @@ func (s *Serializer) NullArray() string {
 }
 
 func (s *Serializer) BulkStringArray(texts []string) string {
-	size := len(texts)
-	result := fmt.Sprintf("*%d\r\n", size)
+	result := []string{}
 	for _, text := range texts {
-		result += s.BulkString(text)
+		result = append(result, s.BulkString(text))
 	}
-	return result
+	return s.Array(result)
 }
 
 func (s *Serializer) Array(texts []string) string {
@@ -63,22 +62,23 @@ func (s *Serializer) StreamItems(items []stream.StreamItem) string {
 		id := item.IdString()
 		values := item.Values
 
-		serializedId := s.BulkString(id)
-		serializedValue := s.BulkStringArray(values)
-		serializedItem := s.Array([]string{serializedId, serializedValue})
+		serializedItem := s.Array([]string{
+			s.BulkString(id),
+			s.BulkStringArray(values),
+		})
 		serializedItems = append(serializedItems, serializedItem)
 	}
 	return s.Array(serializedItems)
 }
 
-func (s *Serializer) XReadResult(key string, streamItems []stream.StreamItem) string {
-
-	return s.Array(
-		[]string{
-			s.Array([]string{
-				s.BulkString(key),
-				s.StreamItems(streamItems),
-			}),
-		},
-	)
+func (s *Serializer) XReadResult(keys []string, streamItems [][]stream.StreamItem) string {
+	result := []string{}
+	for i, key := range keys {
+		streamItem := streamItems[i]
+		result = append(result, s.Array([]string{
+			s.BulkString(key),
+			s.StreamItems(streamItem),
+		}))
+	}
+	return s.Array(result)
 }
